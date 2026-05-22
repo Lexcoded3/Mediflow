@@ -1,0 +1,224 @@
+CREATE DATABASE IF NOT EXISTS mediflow;
+USE mediflow;
+
+-- Departments
+CREATE TABLE departments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    status TINYINT(1) DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Doctors
+CREATE TABLE doctors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    department_id INT,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    status TINYINT(1) DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+-- Patients
+CREATE TABLE patients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id VARCHAR(20) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    dob DATE,
+    age VARCHAR(20),
+    gender ENUM('Male','Female','Other'),
+    blood_group VARCHAR(10),
+    address TEXT,
+    emergency_contact_name VARCHAR(100),
+    emergency_contact_phone VARCHAR(20),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Visits (OPD Tickets)
+CREATE TABLE visits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    visit_id VARCHAR(20) UNIQUE NOT NULL,
+    patient_id INT NOT NULL,
+    department_id INT NOT NULL,
+    doctor_id INT,
+    token_number INT NOT NULL,
+    visit_date DATE NOT NULL,
+    status ENUM('registered','triage','consulting','lab','pharmacy','completed','closed') DEFAULT 'registered',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    closed_at DATETIME,
+    FOREIGN KEY (patient_id) REFERENCES patients(id),
+    FOREIGN KEY (department_id) REFERENCES departments(id),
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id),
+    INDEX idx_visit_date (visit_date),
+    INDEX idx_status (status)
+);
+
+-- Triage
+CREATE TABLE triage (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    visit_id INT NOT NULL UNIQUE,
+    priority ENUM('green','yellow','orange','red') DEFAULT 'green',
+    bp_systolic INT,
+    bp_diastolic INT,
+    pulse INT,
+    temperature DECIMAL(5,2),
+    spo2 INT,
+    weight DECIMAL(5,2),
+    chief_complaint TEXT,
+    notes TEXT,
+    is_emergency TINYINT(1) DEFAULT 0,
+    triaged_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (visit_id) REFERENCES visits(id)
+);
+
+-- Consultations
+CREATE TABLE consultations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    visit_id INT NOT NULL UNIQUE,
+    doctor_id INT NOT NULL,
+    chief_complaint TEXT,
+    history TEXT,
+    examination TEXT,
+    diagnosis TEXT,
+    notes TEXT,
+    follow_up_date DATE,
+    follow_up_notes TEXT,
+    consulted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (visit_id) REFERENCES visits(id),
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+);
+
+-- Prescriptions
+CREATE TABLE prescriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    consultation_id INT NOT NULL,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (consultation_id) REFERENCES consultations(id)
+);
+
+CREATE TABLE prescription_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    prescription_id INT NOT NULL,
+    medicine_name VARCHAR(200) NOT NULL,
+    dosage VARCHAR(100),
+    frequency VARCHAR(100),
+    duration VARCHAR(100),
+    instructions TEXT,
+    FOREIGN KEY (prescription_id) REFERENCES prescriptions(id)
+);
+
+-- Lab Orders
+CREATE TABLE lab_orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    visit_id INT NOT NULL,
+    test_name VARCHAR(200) NOT NULL,
+    status ENUM('ordered','collected','processing','completed') DEFAULT 'ordered',
+    ordered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME,
+    FOREIGN KEY (visit_id) REFERENCES visits(id)
+);
+
+CREATE TABLE lab_results (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lab_order_id INT NOT NULL UNIQUE,
+    results TEXT,
+    remarks TEXT,
+    entered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (lab_order_id) REFERENCES lab_orders(id)
+);
+
+-- Scans
+CREATE TABLE scans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    visit_id INT NOT NULL,
+    scan_type VARCHAR(100) NOT NULL,
+    file_path VARCHAR(500),
+    findings TEXT,
+    status ENUM('ordered','completed') DEFAULT 'ordered',
+    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (visit_id) REFERENCES visits(id)
+);
+
+-- Pharmacy Stock
+CREATE TABLE pharmacy_stock (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_name VARCHAR(200) NOT NULL,
+    generic_name VARCHAR(200),
+    category VARCHAR(100),
+    unit VARCHAR(50) DEFAULT 'Tablet',
+    stock_qty INT DEFAULT 0,
+    min_stock INT DEFAULT 10,
+    price DECIMAL(10,2) DEFAULT 0.00,
+    status TINYINT(1) DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Pharmacy Dispensing
+CREATE TABLE pharmacy_dispense (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    visit_id INT NOT NULL,
+    prescription_id INT,
+    medicine_id INT NOT NULL,
+    quantity INT NOT NULL,
+    dispensed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (visit_id) REFERENCES visits(id),
+    FOREIGN KEY (prescription_id) REFERENCES prescriptions(id),
+    FOREIGN KEY (medicine_id) REFERENCES pharmacy_stock(id)
+);
+
+-- ==================== SAMPLE DATA ====================
+
+INSERT INTO departments (name, description) VALUES
+('General Medicine', 'General outpatient care'),
+('Orthopedics', 'Bone and joint issues'),
+('Pediatrics', 'Child healthcare'),
+('ENT', 'Ear, Nose, Throat'),
+('Ophthalmology', 'Eye care'),
+('Dermatology', 'Skin conditions'),
+('Gynecology', 'Women health'),
+('Cardiology', 'Heart conditions');
+
+INSERT INTO doctors (name, department_id, phone, email) VALUES
+('Dr. Sarah Ahmed', 1, '01712345678', 'sarah@mediflow.com'),
+('Dr. Karim Hossain', 2, '01712345679', 'karim@mediflow.com'),
+('Dr. Fatima Begum', 3, '01712345680', 'fatima@mediflow.com'),
+('Dr. Rahman Miah', 4, '01712345681', 'rahman@mediflow.com'),
+('Dr. Nasreen Akter', 5, '01712345682', 'nasreen@mediflow.com'),
+('Dr. Tanvir Islam', 6, '01712345683', 'tanvir@mediflow.com'),
+('Dr. Salma Khatun', 7, '01712345684', 'salma@mediflow.com'),
+('Dr. Imran Khan', 8, '01712345685', 'imran@mediflow.com');
+
+INSERT INTO patients (patient_id, name, phone, email, dob, age, gender, blood_group, address) VALUES
+('PAT-00001', 'Rahim Uddin', '01812345678', 'rahim@gmail.com', '1985-03-15', '39', 'Male', 'B+', 'Dhaka, Bangladesh'),
+('PAT-00002', 'Karima Begum', '01812345679', 'karima@gmail.com', '1990-07-22', '34', 'Female', 'A+', 'Chittagong, Bangladesh'),
+('PAT-00003', 'Jamal Hossain', '01812345680', NULL, '1978-11-10', '46', 'Male', 'O+', 'Sylhet, Bangladesh'),
+('PAT-00004', 'Nasima Akter', '01812345681', 'nasima@yahoo.com', '1995-01-05', '29', 'Female', 'AB+', 'Rajshahi, Bangladesh'),
+('PAT-00005', 'Kamal Uddin', '01812345682', NULL, '1982-09-18', '42', 'Male', 'B-', 'Khulna, Bangladesh');
+
+-- Sample visits for today
+INSERT INTO visits (visit_id, patient_id, department_id, doctor_id, token_number, visit_date, status) VALUES
+('OPD-250101-001', 1, 1, 1, 1, CURDATE(), 'completed'),
+('OPD-250101-002', 2, 3, 3, 1, CURDATE(), 'consulting'),
+('OPD-250101-003', 3, 2, 2, 1, CURDATE(), 'triage'),
+('OPD-250101-004', 4, 1, 1, 2, CURDATE(), 'registered'),
+('OPD-250101-005', 5, 4, 4, 1, CURDATE(), 'registered');
+
+-- Sample pharmacy stock
+INSERT INTO pharmacy_stock (medicine_name, generic_name, category, unit, stock_qty, min_stock, price) VALUES
+('Paracetamol 500mg', 'Paracetamol', 'Analgesic', 'Tablet', 5000, 100, 2.00),
+('Amoxicillin 500mg', 'Amoxicillin', 'Antibiotic', 'Capsule', 3000, 100, 8.00),
+('Omeprazole 20mg', 'Omeprazole', 'Antacid', 'Capsule', 2000, 100, 5.00),
+('Cetirizine 10mg', 'Cetirizine', 'Antihistamine', 'Tablet', 4000, 100, 3.00),
+('Azithromycin 500mg', 'Azithromycin', 'Antibiotic', 'Tablet', 1500, 100, 15.00),
+('Metformin 500mg', 'Metformin', 'Antidiabetic', 'Tablet', 3000, 100, 4.00),
+('Ibuprofen 400mg', 'Ibuprofen', 'Analgesic', 'Tablet', 2500, 100, 3.50),
+('Cough Syrup', 'Dextromethorphan', 'Cough', 'Bottle', 800, 50, 45.00);
