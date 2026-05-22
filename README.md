@@ -1,7 +1,7 @@
 # Mediflow — Medical Unit Management System
 
 <p align="center">
-  <img src="app/assets/images/logo.png" alt="Mediflow Banner" width="600" height="300"/>
+  <img src="app/assets/images/logo.png" alt="Mediflow Banner" width="100" height="100"/>
 </p>
 
 <p align="center">
