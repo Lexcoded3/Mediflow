@@ -115,7 +115,7 @@ Patients can check their current status at any point using their unique **Patien
 ## 💬 Contact & Support
 
 - **GitHub:** [@Lexcoded3](https://github.com/Lexcoded3)
-- **Email:** your@email.com
+- **Email:** samalexalexis3@gmail.com
 - **WhatsApp:** [Chat](https://wa.me/256777777861)
 
 ---
