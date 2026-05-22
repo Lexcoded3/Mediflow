@@ -120,7 +120,7 @@ Patients can check their current status at any point using their unique **Patien
 
 | Consultation | Lab |
 |---|---|
-| ![Consultation](screenshots/consultation.png) | ![Lab](screenshots/lab.png) |
+| ![Consultation](screenshots/doctor.png) | ![Lab](screenshots/lab.png) |
 
 | Pharmacy | Billing |
 |---|---|
