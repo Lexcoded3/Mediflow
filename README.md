@@ -112,6 +112,20 @@ Patients can check their current status at any point using their unique **Patien
 
 ---
 
+## 📸 Screenshots
+
+| Reception | Triage |
+|---|---|
+| ![Reception](screenshots/reception.png) | ![Triage](screenshots/triage.png) |
+
+| Consultation | Lab |
+|---|---|
+| ![Consultation](screenshots/consultation.png) | ![Lab](screenshots/lab.png) |
+
+| Pharmacy | Billing |
+|---|---|
+| ![Pharmacy](screenshots/pharmacy.png) | ![Billing](screenshots/billing.png) |
+
 ## 💬 Contact & Support
 
 - **GitHub:** [@Lexcoded3](https://github.com/Lexcoded3)
